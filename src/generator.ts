@@ -74,6 +74,9 @@ export async function generateProject(schema: AppSchema, outputDir: string) {
   await generateFile('middleware.hbs', 'src/middleware/error.middleware.ts', enrichedSchema);
   await generateFile('util.hbs', 'src/utils/response.util.ts', enrichedSchema);
 
+  // 7. Generate Deployment Config Files
+  await generateFile('vercel.hbs', 'vercel.json', enrichedSchema); 
+
   // 7. Generate Modules (Controller, Service, Routes for each Entity)
   for (const entity of enrichedSchema.entities) {
     // Controller
