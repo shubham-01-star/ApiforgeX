@@ -1,0 +1,11 @@
+import { Router } from 'express';
+import * as {{name}}Controller from '../controllers/{{lowerName}}.controller';
+
+const router = Router();
+
+router.get('/', {{name}}Controller.get{{name}}s);
+router.get('/:id', {{name}}Controller.get{{name}}ById);
+router.post('/', {{name}}Controller.create{{name}});
+router.delete('/:id', {{name}}Controller.delete{{name}});
+
+export default router;

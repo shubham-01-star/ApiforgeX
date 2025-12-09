@@ -1,0 +1,41 @@
+import { Request, Response, NextFunction } from 'express';
+import * as {{name}}Service from '../services/{{lowerName}}.service';
+import { sendResponse } from '../utils/response.util';
+
+export const get{{name}}s = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const items = await {{name}}Service.findAll();
+    sendResponse(res, 200, items);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const get{{name}}ById = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const item = await {{name}}Service.findById(Number(req.params.id));
+    if (!item) return sendResponse(res, 404, null, '{{name}} not found');
+    
+    sendResponse(res, 200, item);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const create{{name}} = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const item = await {{name}}Service.create(req.body);
+    sendResponse(res, 201, item, '{{name}} created successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const delete{{name}} = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await {{name}}Service.remove(Number(req.params.id));
+    sendResponse(res, 200, null, '{{name}} deleted successfully');
+  } catch (error) {
+    next(error);
+  }
+};
