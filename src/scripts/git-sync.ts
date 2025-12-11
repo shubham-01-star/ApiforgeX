@@ -25,13 +25,15 @@ if (!fs.existsSync(absProjectPath)) {
     process.exit(1);
 }
 
-const run = (command: string, cwd: string) => {
+const run = (command: string, cwd: string, ignoreError = false) => {
     try {
         console.log(chalk.gray(`> ${command}`));
         execSync(command, { stdio: 'inherit', cwd });
     } catch (error) {
         console.error(chalk.red(`Failed to execute: ${command}`));
-        process.exit(1);
+        if (!ignoreError) {
+            process.exit(1);
+        }
     }
 };
 
@@ -49,13 +51,13 @@ if (!fs.existsSync(path.join(absProjectPath, '.git'))) {
 // 2. Commit Changes (Do this locally regardless of remote)
 run('git add .', absProjectPath);
 try {
-    run('git commit -m "Initial generation by ApiforgeX"', absProjectPath);
+    run('git commit -m "Initial generation by ApiforgeX"', absProjectPath, true);
 } catch (e) {
     console.log(chalk.yellow('Nothing to commit or empty commit. Continuing...'));
 }
 
 // 3. Add Remote & Push
-if (githubToken === 'mock-token') {
+if (githubToken.includes('mock-token')) {
     console.log(chalk.yellow('⚠️  Test Mode: Skipping Remote Sync (Mock Token detected).'));
     console.log(chalk.green('\n✅ Git Initialized & Committed locally (No Push).'));
     process.exit(0);
@@ -69,10 +71,14 @@ try {
     // Ignore error if remote doesn't exist
 }
 
+// Extract repo name if a URL is passed (handle cases like https://github.com/user/repo.git)
+let repoName = process.argv[5] || path.basename(absProjectPath);
+repoName = path.basename(repoName, '.git');
+
 // Construct secure remote URL (careful not to log the token in production logs if possible)
-const remoteUrl = `https://${githubUser}:${githubToken}@github.com/${githubUser}/${path.basename(absProjectPath)}.git`;
+const remoteUrl = `https://${githubUser}:${githubToken}@github.com/${githubUser}/${repoName}.git`;
 run(`git remote add origin ${remoteUrl}`, absProjectPath);
 
-run('git push -u origin main', absProjectPath);
+run('git push -u origin main --force', absProjectPath);
 
 console.log(chalk.green('\n✅ Successfully Synced to GitHub!'));

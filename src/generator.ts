@@ -32,7 +32,7 @@ export async function generateProject(schema: AppSchema, outputDir: string) {
   const generateFile = async (templateName: string, outputFile: string, data: any) => {
     try {
       const templatePath = path.join(templateDir, templateName);
-      
+
       // Check if template exists
       try {
         await fs.access(templatePath);
@@ -61,13 +61,16 @@ export async function generateProject(schema: AppSchema, outputDir: string) {
   };
 
   // 4. Generate Core Config & Infrastructure Files
+  await generateFile('gitignore.hbs', '.gitignore', enrichedSchema);
+  await generateFile('coderabbit.yaml.hbs', '.coderabbit.yaml', enrichedSchema);
   await generateFile('package.json.hbs', 'package.json', enrichedSchema);
   await generateFile('tsconfig.json.hbs', 'tsconfig.json', enrichedSchema);
   await generateFile('prisma.hbs', 'prisma/schema.prisma', enrichedSchema);
   await generateFile('server.hbs', 'src/index.ts', enrichedSchema);
-  
+
   // 5. Generate Environment & DB Config
   await generateFile('env.hbs', '.env', enrichedSchema);
+  await generateFile('env.hbs', '.env.example', enrichedSchema);
   await generateFile('db.config.hbs', 'src/config/db.config.ts', enrichedSchema);
 
   // 6. Generate MVC Base Files
@@ -75,28 +78,28 @@ export async function generateProject(schema: AppSchema, outputDir: string) {
   await generateFile('util.hbs', 'src/utils/response.util.ts', enrichedSchema);
 
   // 7. Generate Deployment Config Files
-  await generateFile('vercel.hbs', 'vercel.json', enrichedSchema); 
+  await generateFile('vercel.hbs', 'vercel.json', enrichedSchema);
 
   // 7. Generate Modules (Controller, Service, Routes for each Entity)
   for (const entity of enrichedSchema.entities) {
     // Controller
     await generateFile(
-      'controller.hbs', 
-      `src/controllers/${entity.lowerName}.controller.ts`, 
+      'controller.hbs',
+      `src/controllers/${entity.lowerName}.controller.ts`,
       entity
     );
 
     // Service
     await generateFile(
-      'service.hbs', 
-      `src/services/${entity.lowerName}.service.ts`, 
+      'service.hbs',
+      `src/services/${entity.lowerName}.service.ts`,
       entity
     );
-    
+
     // Routes
     await generateFile(
-      'route.hbs', 
-      `src/routes/${entity.lowerName}.routes.ts`, 
+      'route.hbs',
+      `src/routes/${entity.lowerName}.routes.ts`,
       entity
     );
   }
