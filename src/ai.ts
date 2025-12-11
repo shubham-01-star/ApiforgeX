@@ -41,7 +41,8 @@ export async function generateSchema(prompt: string, dbType: string): Promise<Ap
 
 async function checkOllamaHealth(): Promise<boolean> {
   try {
-    const res = await fetch('http://127.0.0.1:11434/api/tags');
+    const host = process.env.OLLAMA_HOST || 'http://127.0.0.1:11434';
+    const res = await fetch(`${host}/api/tags`);
     return res.ok;
   } catch {
     return false;
@@ -49,7 +50,8 @@ async function checkOllamaHealth(): Promise<boolean> {
 }
 
 async function callOllama(prompt: string, dbType: string): Promise<AppSchema> {
-  const response = await fetch('http://127.0.0.1:11434/api/generate', {
+  const host = process.env.OLLAMA_HOST || 'http://127.0.0.1:11434';
+  const response = await fetch(`${host}/api/generate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -64,7 +66,7 @@ async function callOllama(prompt: string, dbType: string): Promise<AppSchema> {
 
   const data = await response.json() as any;
   const schema = JSON.parse(data.response);
-  
+
   // Force the user-selected DB type, just in case AI got creative
   schema.databaseType = dbType;
   return schema;

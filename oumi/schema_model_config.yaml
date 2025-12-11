@@ -1,0 +1,30 @@
+model:
+  name: "meta-llama/Llama-3.2-1B-Instruct"
+  trust_remote_code: true
+  
+data:
+  train:
+    datasets:
+      - type: "json"
+        path: "training_data/text_to_sql_v1.json"
+    target_col: "completion"
+    input_col: "prompt"
+
+training:
+  output_dir: "output"
+  num_train_epochs: 3
+  per_device_train_batch_size: 2
+  gradient_accumulation_steps: 4
+  learning_rate: 2e-4
+  warmup_steps: 100
+  weight_decay: 0.01
+
+peft:
+  lora:
+    r: 16
+    lora_alpha: 32
+    lora_dropout: 0.05
+    target_modules: ["q_proj", "v_proj"]
+
+fsdp:
+  enable: false

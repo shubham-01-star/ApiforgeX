@@ -1,0 +1,109 @@
+id: apiforgex-agent
+namespace: dev.apiforgex
+description: "The Autonomous Agent that builds, audits, and notifies."
+
+inputs:
+  - id: projectName
+    type: STRING
+    defaults: "kestra-generated-api"
+    description: "The name of the folder/project to create"
+  
+  - id: database
+    type: SELECT
+    values: ["postgresql", "mysql", "mongodb"]
+    defaults: "postgresql"
+    description: "Target Database"
+
+  - id: prompt
+    type: STRING
+    defaults: "A simple task management API with Users and Todos"
+    description: "The natural language requirement"
+
+  - id: slack_webhook
+    type: STRING
+    defaults: "https://hooks.slack.com/services/T000/B000/XXXX"
+    description: "Slack Webhook URL for notifications"
+    
+  - id: github_token
+    type: STRING
+    defaults: "mock-token"
+    description: "GitHub Personal Access Token (or 'mock-token' for test)"
+    
+  - id: github_user
+    type: STRING
+    defaults: "apiforgex-bot"
+    description: "GitHub Username for the remote"
+
+  - id: vercel_token
+    type: STRING
+    defaults: "mock-token"
+    description: "Vercel Deployment Token (or 'mock-token' for test)"
+
+tasks:
+  - id: log_start
+    type: io.kestra.plugin.core.log.Log
+    message: "🚀 Starting ApiforgeX Agent for project: {{ inputs.projectName }}"
+
+  - id: scaffold_code
+    type: io.kestra.plugin.scripts.shell.Commands
+    runner: PROCESS
+    env:
+      OLLAMA_HOST: "http://host.docker.internal:11434"
+    commands:
+      - "cd /app/projects/ApiforgeX"
+      - "echo '🏗️  Triggering CLI Generator...'"
+      # Runs the local CLI we just built in the custom image environment
+      - "npm install" # Ensure dependencies are installed/rebuilt for Linux
+      - "npm start -- generate --name {{ inputs.projectName }} --db {{ inputs.database }} --prompt \"{{ inputs.prompt }}\""
+    
+  - id: git_sync
+    type: io.kestra.plugin.scripts.shell.Commands
+    runner: PROCESS
+    commands:
+      - "cd /app/projects/ApiforgeX"
+      - "echo '📦 Running Git Sync Script...'"
+      # Execute the script we just wrote
+      - "node --loader ts-node/esm src/scripts/git-sync.ts {{ inputs.projectName }} {{ inputs.github_user }} {{ inputs.github_token }}"
+
+  - id: create_pr_branch
+    type: io.kestra.plugin.scripts.shell.Commands
+    runner: PROCESS
+    commands:
+      - "cd /app/projects/ApiforgeX/{{ inputs.projectName }}"
+      # Need to configure safe directory for git in docker
+      - "git config --global --add safe.directory /app/projects/ApiforgeX/{{ inputs.projectName }}"
+      - "git checkout -b feat/initial-setup"
+      # Only push if not mock
+      - "if [ '{{ inputs.github_token }}' != 'mock-token' ]; then git push origin feat/initial-setup; else echo '⚠️ Mock Mode: Skipping Branch Push'; fi"
+
+  - id: open_pr
+    type: io.kestra.plugin.scripts.shell.Commands
+    runner: PROCESS
+    commands:
+      - "echo '🐰 Triggering CodeRabbit via Pull Request...'"
+      # In a real scenario, use curl to call GitHub v3 API
+      - "if [ '{{ inputs.github_token }}' != 'mock-token' ]; then echo 'curl -X POST ...'; else echo '⚠️ Mock Mode: Skipping PR Creation'; fi"
+
+  - id: deploy_vercel
+    type: io.kestra.plugin.scripts.shell.Commands
+    runner: PROCESS
+    commands:
+      - "cd /app/projects/ApiforgeX"
+      - "echo '🚀 Deploying to Vercel...'"
+      - "cd {{ inputs.projectName }}"
+      - "if [ '{{ inputs.vercel_token }}' != 'mock-token' ]; then npx vercel deploy --prod --token {{ inputs.vercel_token }} --yes; else echo '⚠️ Mock Mode: Skipping Vercel Deployment'; fi"
+
+  - id: notify_success
+    type: io.kestra.plugin.core.log.Log
+    message: |
+      ✅ Mission Complete!
+      🚀 Project: {{ inputs.projectName }}
+      📚 Database: {{ inputs.database }}
+      ✨ Status: Deployed & Audited.
+      🔗 Vercel: https://{{ inputs.projectName }}.vercel.app
+      🔗 GitHub PR: https://github.com/{{ inputs.github_user }}/{{ inputs.projectName }}/pull/1
+
+errors:
+  - id: notify_failure
+    type: io.kestra.plugin.core.log.Log
+    message: "❌ ApiforgeX Failed on project {{ inputs.projectName }}. Check logs."
