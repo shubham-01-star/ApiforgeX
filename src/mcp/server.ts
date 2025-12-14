@@ -79,9 +79,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
             for (const [key, value] of Object.entries(fields)) {
                 if (value) {
-                    // Escape double quotes in value if necessary (basic check)
-                    const safeValue = String(value).replace(/"/g, '\\"');
-                    curlArgs.push('-F', `${key}=${safeValue}`);
+                    // Escape double quotes and backslashes in value
+                    const safeValue = String(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/'/g, "\\'");
+                    curlArgs.push('-F', `${key}="${safeValue}"`);
                 }
             }
 
