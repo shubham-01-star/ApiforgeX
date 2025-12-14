@@ -9,7 +9,7 @@ inputs:
 
   - id: github_repo
     type: STRING
-    defaults: "apiforgex-demo-output"
+    defaults: "MY_GITHUB_TOKEN"-output"
 
   - id: github_token
     type: STRING
