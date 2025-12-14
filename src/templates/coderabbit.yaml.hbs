@@ -2,8 +2,8 @@
 version: "0.1"
 
 reviews:
-# Enable high-level summary
-high_level_summary: true
+# Disable high-level summary as requested
+high_level_summary: false
 
 # Review the changes in the context of the entire file
 verification_status: true
@@ -12,11 +12,31 @@ verification_status: true
 auto_review:
 enabled: true
 drafts: false
+base_branches: ["main", "master"]
+
+path_filters:
+- "!**/package-lock.json"
+- "!**/yarn.lock"
+- "!**/*.lock"
+
+request_changes_workflow: false
+
+instructions: |
+You are a supportive Senior Engineer and Mentor.
+Your goal is to ensure the code is functional and safe.
+
+CRITICAL RULES:
+1. If the code works and is safe, APPROVE it.
+2. Start comments with "/fix" ONLY for:
+- Security vulnerabilities (SQL Injection, XSS)
+- Crashes or infinite loops
+- Memory leaks
+3. For style/linting issues, nice-to-haves, or minor suggestions:
+- Do NOT use "/fix".
+- Just add a normal comment.
+4. Be brief. Do not block merging for trivial reasons.
+
+If no critical issues found, simply comment: "Looks good! 🚀" and APPROVE.
 
 chat:
 auto_reply: true
-
-# Knowledge base for context (optional)
-# knowledge_base:
-# - name: "ProjectContext"
-# file: "README.md"

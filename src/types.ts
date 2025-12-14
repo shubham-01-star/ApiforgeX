@@ -16,4 +16,14 @@ export interface AppSchema {
   projectName: string;
   databaseType: 'postgresql' | 'mysql' | 'mongodb';
   entities: Entity[];
+  additionalFiles?: { path: string, description: string }[];
+}
+
+export interface GithubComment {
+  id: number;
+  body: string;
+  path: string;
+  line: number; // Can be null for general comments, but Pr comments have it
+  user: string;
+  created_at: string;
 }

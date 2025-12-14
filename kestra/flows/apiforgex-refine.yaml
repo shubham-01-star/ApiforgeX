@@ -1,0 +1,95 @@
+id: apiforgex-refine
+namespace: dev.apiforgex
+description: "Autonomously refines code based on GitHub PR reviews"
+
+inputs:
+  - id: projectName
+    type: STRING
+    description: "Project folder name"
+  
+  - id: branchName
+    type: STRING
+    description: "Feature branch to refine"
+
+  - id: prNumber
+    type: INT
+    description: "Pull Request Number"
+
+  - id: github_user
+    type: STRING
+    defaults: "apiforgex-bot"
+
+  - id: github_repo
+    type: STRING
+    defaults: "apiforgex-demo-output"
+
+  - id: github_token
+    type: STRING
+    defaults: "mock-token"
+
+  - id: slack_webhook
+    type: STRING
+    defaults: "https://hooks.slack.com/services/XXXX"
+
+tasks:
+  - id: checkout_branch
+    type: io.kestra.plugin.scripts.shell.Commands
+    runner: PROCESS
+    commands:
+      - "cd /app/projects/ApiforgeX/{{ inputs.projectName }}"
+      - "echo '🌿 Checking out feature branch: {{ inputs.branchName }}'"
+      - "git fetch origin"
+      - "git checkout {{ inputs.branchName }}"
+
+  - id: run_refine
+    type: io.kestra.plugin.scripts.shell.Commands
+    runner: PROCESS
+    env:
+      OLLAMA_HOST: "http://host.docker.internal:11434"
+    commands:
+      - "cd /app/projects/ApiforgeX"
+      - "cd {{ inputs.projectName }}"
+      - "echo '🛠️  Running AI Refinement Engine...'"
+      # Run the CLI tool from the root, but targeting the project folder content
+      # Actually CLI assumes process.cwd() is project root if we run inside it? Use ../../bin/apiforgex.ts
+      # Or just run `npm start` from root and ensure `refine` uses cwd correctly?
+      # `refine` uses `process.cwd()` to read files. So we must be IN the project folder.
+      # But `npm start` runs `bin/apiforgex.ts`. `npm start` is in root.
+      # Solution: Run `node ... bin/apiforgex.ts` from project folder? No, deps are in root.
+      # Solution: Run from root, but pass project path? Refine command doesn't take project path yet.
+      # Refine command uses `process.cwd()` + `comment.path`.
+      # If I run from root, `comment.path` (e.g. `src/index.ts`) will be looked for in root. WRONG.
+      # I need `refine` to accept `--cwd` or run it such that it works.
+      # EASIEST: Run from root, but ensure `comment.path` is prefixed with project name?
+      # No, comment path comes from GitHub diff, which is relative to repo root (which IS the project root).
+      # So `src/index.ts`.
+      # If I run `npm start` from `/app/projects/ApiforgeX`, `process.cwd()` is `/app/projects/ApiforgeX`.
+      # It will look for `src/index.ts` in `/app/projects/ApiforgeX/src/index.ts`.
+      # BUT the project is in `/app/projects/ApiforgeX/{{ inputs.projectName }}`.
+      # So I need to `cd` into the project ONLY IF `npm start` handles it.
+      # `npm start` runs `ts-node bin/apiforgex.ts`. `bin/apiforgex.ts` is in root.
+      # CORRECT APPROACH: execute node command explicitly from root, but pass CWD logic?
+      # OR: Add `--cwd` option to refine command.
+      # I will add `--cwd` logic to `refine.ts` later or assume I run `node ../../bin/apiforgex.ts` from project folder.
+      # Let's try executing from project content folder using absolute path to bin.
+      - "node --loader ts-node/esm ../bin/apiforgex.ts refine --pr {{ inputs.prNumber }} --owner {{ inputs.github_user }} --repo {{ inputs.github_repo }} --token {{ inputs.github_token }}"
+
+  - id: commit_fixes
+    type: io.kestra.plugin.scripts.shell.Commands
+    runner: PROCESS
+    commands:
+      - "cd /app/projects/ApiforgeX/{{ inputs.projectName }}"
+      # Check if any changes
+      - |
+        if [[ `git status --porcelain` ]]; then
+          echo "💾 Changes detected. Committing..."
+          git config --global user.email 'bot@apiforgex.com'
+          git config --global user.name 'ApiforgeX Agent'
+          git commit -am "fix: AI Refinement based on PR #{{ inputs.prNumber }}"
+          git push origin {{ inputs.branchName }}
+          
+          # Notify Slack
+          curl -X POST -H "Content-type: application/json" --data "{ \"text\": \"🛠️ *Refinement Applied!*\\nFixed issues in PR #{{ inputs.prNumber }}.\\nBranch: {{ inputs.branchName }}\" }" {{ inputs.slack_webhook }}
+        else
+          echo "✨ No changes to commit. AI was happy."
+        fi

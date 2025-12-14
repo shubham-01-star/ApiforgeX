@@ -1,0 +1,38 @@
+id: apiforgex-watcher
+namespace: dev.apiforgex
+description: "The Sentinel. Watches for 'Changes Requested' and triggers auto-refinement."
+
+inputs:
+  - id: github_user
+    type: STRING
+    defaults: "shubham-01-star" # Updated to observed user
+
+  - id: github_repo
+    type: STRING
+    defaults: "apiforgex-demo-output"
+
+  - id: github_token
+    type: STRING
+    defaults: "MY_GITHUB_TOKEN" 
+  - id: slack_webhook
+    type: STRING
+    defaults: "https://hooks.slack.com/services/XXXX"
+    description: "Slack Webhook URL"
+
+tasks:
+  - id: run_watcher
+    type: io.kestra.plugin.scripts.shell.Commands
+    runner: PROCESS
+    env:
+        OLLAMA_HOST: "http://host.docker.internal:11434"
+        SLACK_WEBHOOK: "{{ inputs.slack_webhook }}"
+    commands:
+      - "cd /app/projects/ApiforgeX"
+      - "echo '👀 Sentinel active. Scanning for reviews...'"
+      - "node --loader ts-node/esm src/scripts/watcher.ts {{ inputs.github_user }} {{ inputs.github_repo }} {{ inputs.github_token }}"
+
+triggers:
+  - id: schedule
+    type: io.kestra.plugin.core.trigger.Schedule
+    cron: "*/2 * * * *"
+    # Inputs for the schedule are taken from defaults unless specified here

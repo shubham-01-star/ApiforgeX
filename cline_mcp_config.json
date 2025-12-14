@@ -1,0 +1,22 @@
+{
+    "mcpServers": {
+        "apiforgex": {
+            "command": "node",
+            "args": [
+                "${workspaceFolder}/dist/src/mcp/server.js"
+            ],
+            "env": {
+                "KESTRA_USER": "admin",
+                "KESTRA_PASSWORD": "password",
+                "KESTRA_URL": "http://localhost:8080/api/v1",
+                "OLLAMA_HOST": "http://localhost:11434",
+                "GITHUB_TOKEN": "YOUR_GITHUB_TOKEN",
+                "GITHUB_USER": "YOUR_GITHUB_USER",
+                "GITHUB_REPO": "apiforgex-demo-output",
+                "SLACK_WEBHOOK": "YOUR_SLACK_WEBHOOK_URL",
+                "GEMINI_API_KEY": "YOUR_GEMINI_API_KEY"
+            },
+            "autoApprove": []
+        }
+    }
+}

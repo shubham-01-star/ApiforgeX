@@ -4,6 +4,8 @@ import handlebars from 'handlebars';
 import { fileURLToPath } from 'url';
 import { AppSchema } from './types.js';
 
+import { generateFileContent } from './ai.js';
+
 // Fix for __dirname in ESM modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -13,8 +15,25 @@ handlebars.registerHelper('eq', function (a, b) {
   return a === b;
 });
 
+// Template directory logic
 export async function generateProject(schema: AppSchema, outputDir: string) {
-  const templateDir = path.join(__dirname, 'templates');
+  // FIX for dist/ vs src/ execution
+  let templateDir = path.join(__dirname, 'templates');
+
+  // If templates not found in current dir, check if we are in 'dist' and need to go back to src
+  try {
+    await fs.access(templateDir);
+  } catch {
+    // Try resolving relative to project root
+    // If we are in /dist/src, we want /src/templates
+    const fallbackDir = path.resolve(__dirname, '../../src/templates');
+    try {
+      await fs.access(fallbackDir);
+      templateDir = fallbackDir;
+    } catch {
+      console.warn(`⚠️ Warning: Templates not found in ${templateDir} or ${fallbackDir}`);
+    }
+  }
 
   // 1. Create Project Directories (Enterprise MVC Structure)
   console.log(`\n📂 Creating Enterprise MVC structure in: ${outputDir}`);
@@ -61,8 +80,12 @@ export async function generateProject(schema: AppSchema, outputDir: string) {
   };
 
   // 4. Generate Core Config & Infrastructure Files
+  await fs.mkdir(path.join(outputDir, '.github/workflows'), { recursive: true });
+  await generateFile('ci.yml.hbs', '.github/workflows/ci.yml', enrichedSchema);
   await generateFile('gitignore.hbs', '.gitignore', enrichedSchema);
+  // await generateFile('gitignore.hbs', '.gitignore', enrichedSchema);
   await generateFile('coderabbit.yaml.hbs', '.coderabbit.yaml', enrichedSchema);
+  await generateFile('eslintrc.hbs', '.eslintrc.json', enrichedSchema);
   await generateFile('package.json.hbs', 'package.json', enrichedSchema);
   await generateFile('tsconfig.json.hbs', 'tsconfig.json', enrichedSchema);
   await generateFile('prisma.hbs', 'prisma/schema.prisma', enrichedSchema);
@@ -106,6 +129,22 @@ export async function generateProject(schema: AppSchema, outputDir: string) {
 
   // 8. Generate Documentation (NEW)
   await generateFile('readme.hbs', 'README.md', enrichedSchema);
+
+  // 9. Generate Dynamic Custom Files (NEW)
+  if (schema.additionalFiles && schema.additionalFiles.length > 0) {
+    console.log(`\n🧠 Generating ${schema.additionalFiles.length} custom files based on requirements...`);
+    for (const file of schema.additionalFiles) {
+      const filePath = path.join(outputDir, file.path);
+      const dir = path.dirname(filePath);
+
+      await fs.mkdir(dir, { recursive: true });
+
+      console.log(`   ⏳ Generating content for: ${file.path}`);
+      const content = await generateFileContent(file.path, file.description, schema);
+      await fs.writeFile(filePath, content);
+      console.log(`   ✅ Created ${file.path}`);
+    }
+  }
 
   console.log(`\n🎉 Enterprise Project ${schema.projectName} created successfully!`);
 }

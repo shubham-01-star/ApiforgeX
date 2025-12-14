@@ -1,0 +1,63 @@
+id: apiforgex-deploy
+namespace: dev.apiforgex
+description: "Deploys the application to Vercel after successful review."
+
+inputs:
+  - id: github_user
+    type: STRING
+    defaults: "apiforgex-bot"
+    description: "GitHub Username"
+
+  - id: github_repo
+    type: STRING
+    defaults: "apiforgex-demo-output"
+    description: "GitHub Repository Name"
+    
+  - id: branch
+    type: STRING
+    defaults: "main"
+    description: "Branch to deploy"
+
+  - id: vercel_token
+    type: STRING
+    defaults: "mock-token"
+    description: "Vercel Deployment Token"
+
+  - id: slack_webhook
+    type: STRING
+    defaults: "https://hooks.slack.com/services/T000/B000/XXXX"
+    description: "Slack Webhook URL for notifications"
+
+tasks:
+  - id: clone_repo
+    type: io.kestra.plugin.scripts.shell.Commands
+    runner: PROCESS
+    commands:
+      - "rm -rf /app/projects/deploy_tmp"
+      - "mkdir -p /app/projects/deploy_tmp"
+      - "cd /app/projects/deploy_tmp"
+      - "git clone https://github.com/{{ inputs.github_user }}/{{ inputs.github_repo }}.git ."
+      - "git checkout {{ inputs.branch }}"
+
+  - id: deploy_vercel
+    type: io.kestra.plugin.scripts.shell.Commands
+    runner: PROCESS
+    commands:
+      - "cd /app/projects/deploy_tmp"
+      - "echo '🚀 Deploying to Vercel...'"
+      - |
+        if echo '{{ inputs.vercel_token }}' | grep -q 'mock-token'; then
+          echo '⚠️ Mock Mode: Skipping Vercel Deployment'
+        else
+          VERCEL_OUT_FILE=$(mktemp)
+          npx vercel deploy --prod --token {{ inputs.vercel_token }} --yes 2>&1 | tee $VERCEL_OUT_FILE
+          VERCEL_DEPLOY_URL=$(grep -o 'https://[^ ]*\.vercel\.app' $VERCEL_OUT_FILE | tail -1)
+          
+          echo "🔗 Captured Build URL: $VERCEL_DEPLOY_URL"
+          
+          curl -X POST -H "Content-type: application/json" --data "{ \"text\": \"✅ *Mission Complete!*\\n🚀 Repository: {{ inputs.github_repo }}\\n✨ Status: Deployed to Vercel.\\n🔗 URL: $VERCEL_DEPLOY_URL\" }" {{ inputs.slack_webhook }}
+        fi
+
+  - id: notify_success
+    type: io.kestra.plugin.core.log.Log
+    message: "✅ Deployment Complete! Notifications sent."

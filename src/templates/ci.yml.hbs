@@ -1,0 +1,50 @@
+name: CI
+
+on:
+push:
+branches: [ "main" ]
+pull_request:
+branches: [ "main" ]
+
+jobs:
+build:
+runs-on: ubuntu-latest
+
+strategy:
+matrix:
+node-version: [18.x, 20.x]
+
+steps:
+- uses: actions/checkout@v4
+
+- name: Use Node.js ${{ matrix.node-version }}
+uses: actions/setup-node@v4
+with:
+node-version: ${{ matrix.node-version }}
+cache: npm
+
+- name: Install dependencies
+run: npm install
+
+- name: Generate Prisma Client
+run: npx prisma generate
+
+- name: Build
+run: npm run build --if-present
+
+- name: Run Tests
+run: npm test
+
+deploy:
+needs: build
+runs-on: ubuntu-latest
+if: github.ref == 'refs/heads/main'
+steps:
+- uses: actions/checkout@v4
+- name: Deploy to Vercel
+uses: amondnet/vercel-action@v20
+with:
+vercel-token: ${{ secrets.VERCEL_TOKEN }}
+vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+process-exit-code: 0 # Fallback for demo

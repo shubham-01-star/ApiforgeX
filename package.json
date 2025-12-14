@@ -4,7 +4,7 @@
   "description": "The Autonomous Backend Engineer",
   "type": "module",
   "bin": {
-    "apiforgex": "./bin/apiforgex.ts"
+    "apiforgex": "./dist/bin/apiforgex.js"
   },
   "scripts": {
     "build": "tsc",
@@ -22,17 +22,19 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "commander": "^12.1.0",
-    "handlebars": "^4.7.8",
+    "@google/generative-ai": "^0.24.1",
+    "@modelcontextprotocol/sdk": "^1.24.3",
     "chalk": "^5.3.0",
-    "inquirer": "^9.3.2",
+    "commander": "^12.1.0",
     "dotenv": "^16.4.5",
+    "handlebars": "^4.7.8",
+    "inquirer": "^9.3.2",
     "ora": "^8.0.1"
   },
   "devDependencies": {
-    "typescript": "^5.5.3",
-    "ts-node": "^10.9.2",
+    "@types/inquirer": "^9.0.7",
     "@types/node": "^22.0.0",
-    "@types/inquirer": "^9.0.7"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.3"
   }
 }
