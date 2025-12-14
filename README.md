@@ -6,7 +6,7 @@ The Autonomous Backend Engineer.
 
 Turn a single sentence into a production-ready, deployed API in 60 seconds.
 
-View Demo Video · Report Bug · Request Feature
+View Demo Video | Report Bug
 
 </div>
 
@@ -14,7 +14,7 @@ View Demo Video · Report Bug · Request Feature
 
 ApiforgeX is not just a code generator; it's an Agentic DevOps Pipeline in a Box.
 
-Backend development involves repetitive boilerplate: setting up Express, configuring Prisma, writing CRUD controllers, and managing deployments. ApiforgeX automates 100% of this using a local-first, agentic workflow.
+Backend development involves repetitive boilerplate: setting up Express, configuring Prisma, writing CRUD controllers, and managing deployments. ApiforgeX automates 100% of this.
 
 ✨ Key Features (The "Product" Promise)
 
@@ -28,65 +28,33 @@ Backend development involves repetitive boilerplate: setting up Express, configu
 
 🚀 Instant Deployment: Automatically deploys to Vercel serverless functions.
 
-🔔 Real-time Updates: Get Slack notifications for every build step via Kestra.
+🔔 Real-time Updates: Get Slack notifications for every build step.
 
 🛠️ How It Works (The Architecture)
 
-ApiforgeX combines the power of best-in-class developer tools to create an autonomous loop:
+ApiforgeX combines the power of best-in-class developer tools:
 
-Role
+Interface: Cline (VS Code) acts as the pilot.
 
-Tech Stack
+Orchestrator: Kestra manages the lifecycle (Generate -> Test -> Deploy).
 
-Responsibility
+Intelligence: Ollama (Llama 3.2) generates the logic.
 
-Interface
+Quality: CodeRabbit ensures code health.
 
-Cline (VS Code)
-
-Acts as the pilot to trigger workflows from your editor.
-
-Orchestrator
-
-Kestra
-
-Manages the entire lifecycle (Generate -> Test -> Deploy).
-
-Intelligence
-
-Ollama (Llama 3.2)
-
-Runs locally to generate logic and scaffold code.
-
-Architect
-
-Oumi
-
-specialized model for strict JSON schema design.
-
-Quality
-
-CodeRabbit
-
-Ensures code health via automated PR reviews.
-
-Hosting
-
-Vercel
-
-Serves the generated API globally.
+Hosting: Vercel serves the API globally.
 
 ⚡ Quick Start
 
 Prerequisites
 
-Node.js: v18.0.0 or higher
+Node.js 18+
 
-Docker & Docker Compose: (Required for Kestra local orchestration)
+Docker & Docker Compose (for Kestra)
 
-Tokens: GitHub Token & Vercel Token
+GitHub Token & Vercel Token
 
-GitHub App: You must install the CodeRabbit GitHub App on your target repository.
+**Important**: You must install the [CodeRabbit GitHub App](https://github.com/apps/coderabbitai) on your target repository for the automated review cycle to work.
 
 1. Installation
 
@@ -99,12 +67,12 @@ npm install
 
 2. Start the Orchestrator
 
-Launch Kestra in a local container to manage the agents:
+Launch Kestra in a local container:
 
 docker-compose up -d
 
 
-Visit http://localhost:8080 to see your Kestra dashboard.
+Visit http://localhost:8080 to see the dashboard.
 
 3. Run the Agent
 
@@ -114,67 +82,42 @@ You can run the CLI directly or trigger it via Kestra:
 npm start -- generate --prompt "A task management app" --db postgresql
 
 
-🤝 Configure Cline (MCP)
-
-To enable the Agentic capabilities directly inside VS Code:
-
-Open Cline Settings -> MCP Servers.
-
-Copy the content from cline_mcp_config.json provided in this repo.
-
-Paste it into your Cline MCP Settings file.
-
-Update the Environment Variables (GITHUB_TOKEN, SLACK_WEBHOOK, etc.) with your real credentials.
-
-Ensure the project is built:
-
-npm run build
-
-
-Now you can simply ask Cline:
-
-"Generate a new library management project."
-
 🏆 Hackathon Tracks
 
-We are proudly building on top of the following sponsor technologies:
+We are proudly building on top of:
 
-🟣 Kestra
+Sponsor
 
-Kestra Orchestrates the entire CI/CD pipeline, manages Docker containers, and handles Slack notifications. It is the heart of our autonomous workflow.
+Integration Details
 
-🤖 Cline
+### Kestra
+> [Kestra](https://kestra.io) Orchestrates the entire CI/CD pipeline, manages Docker containers, and handles Slack notifications. The heart of our autonomous workflow.
 
-Cline acts as the pilot and primary interface. We built a custom MCP Server (src/mcp/server.ts) to allow Cline to trigger complex Kestra workflows using natural language.
+### Cline
+> [Cline](https://github.com/cline/cline) acts as the pilot and primary interface. We built a custom MCP Server (`src/mcp/server.ts`) to allow Cline to trigger complex Kestra workflows using natural language.
 
-🧠 Oumi
+### Oumi
+> [Oumi](https://oumi.ai) is used for **Data Synthesis**. We capture the logs and prompts from our agents to build a fine-tuning dataset, preparing for future self-improvement cycles.
 
-Oumi is used for Data Synthesis. We capture the logs and prompts from our agents to build a fine-tuning dataset, preparing for future self-improvement cycles.
+### CodeRabbit
+> [CodeRabbit](https://coderabbit.ai) is our autonomous QA engineer. It reviews every Pull Request generated by the agent. Our "Watcher" script (`watcher.ts`) parses CodeRabbit's feedback to auto-trigger fixes.
 
-🐇 CodeRabbit
-
-CodeRabbit is our autonomous QA engineer. It reviews every Pull Request generated by the agent. Our "Watcher" script (watcher.ts) parses CodeRabbit's feedback to auto-trigger fixes.
-
-▲ Vercel
-
-Vercel provides instant serverless deployment. Every successful merge in our pipeline automatically deploys the generated API to production.
+### Vercel
+> [Vercel](https://vercel.com) provides instant serverless deployment. Every successful merge in our pipeline automatically deploys the generated API to production.
 
 🤝 Contributing
 
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are greatly appreciated.
+### 3. Configure Cline (MCP)
+To enable the Agentic capabilities in VS Code:
+1. Open Cline Settings -> **MCP Servers**.
+2. Copy the content from `cline_mcp_config.json` in this repo.
+3. Paste it into your Cline MCP Settings file.
+4. **Update the Environment Variables** (GITHUB_TOKEN, SLACK_WEBHOOK etc.) with your real credentials.
+5. Ensure the project is built: `npm run build`.
 
-Fork the Project
-
-Create your Feature Branch (git checkout -b feature/AmazingFeature)
-
-Commit your Changes (git commit -m 'Add some AmazingFeature')
-
-Push to the Branch (git push origin feature/AmazingFeature)
-
-Open a Pull Request
+Now you can ask Cline:
+> "Generate a new library management project."
 
 <div align="center">
-
 Built with ❤️ by Shubham Kumar for the 2025 Assemble Hackathon.
-
 </div>
