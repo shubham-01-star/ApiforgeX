@@ -56,13 +56,44 @@ GitHub Token & Vercel Token
 
 **Important**: You must install the [CodeRabbit GitHub App](https://github.com/apps/coderabbitai) on your target repository for the automated review cycle to work.
 
-1. Installation
+## 📦 Installation (For Users)
+The easiest way to use ApiforgeX is to install it globaly via npm:
 
-Clone the repository and install dependencies:
+```bash
+npm install -g apiforgex
+```
 
-git clone [https://github.com/shubham-01-star/ApiforgeX.git](https://github.com/shubham-01-star/ApiforgeX.git)
-cd ApiforgeX
-npm install
+### 🚀 Usage
+Once installed, you can generate a new backend project in seconds:
+
+1. **Initialize Configuration** (Optional, for GitHub/Slack integration)
+   ```bash
+   apiforgex init
+   ```
+
+2. **Generate a Project**
+   ```bash
+   apiforgex generate
+   ```
+   *Follow the interactive prompts to describe your API, choose a database, and watch the magic happen!*
+
+### 🧠 AI Configuration
+ApiforgeX uses AI to generate code. You have two options:
+1. **Google Gemini (Recommended)**: Set `GEMINI_API_KEY` in your environment variables.
+2. **Local Ollama**: Install [Ollama](https://ollama.com) and run `ollama run llama3.2`.
+
+---
+
+## 🛠️ Development Setup (For Contributors)
+
+If you want to contribute to the ApiforgeX source code, follow these steps:
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/shubham-01-star/ApiforgeX.git
+   cd ApiforgeX
+   npm install
+   ```
 
 
 2. Start the Orchestrator
